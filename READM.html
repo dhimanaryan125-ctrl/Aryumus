@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arymus: The Journey Home</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --love: #ff7675;
+            --bg: #1a1a2e;
+            --text: #ffffff;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0; background: var(--bg); color: var(--text);
+            display: flex; align-items: center; justify-content: center; min-height: 100vh;
+            overflow: hidden;
+        }
+        .container { text-align: center; width: 90%; max-width: 500px; }
+        .page { display: none; animation: fadeIn 0.5s ease-in; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* Maze Styles */
+        #maze-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            width: 300px;
+            margin: 20px auto;
+            border: 4px solid var(--primary);
+            background: #0f3460;
+        }
+        .cell { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .wall { background: #16213e; }
+        .player { background: var(--primary); border-radius: 50%; }
+        .goal { background: var(--love); border-radius: 50%; }
+
+        .btn {
+            background: var(--love); color: white; border: none;
+            padding: 15px 30px; border-radius: 10px; cursor: pointer;
+            font-weight: bold; margin-top: 20px; transition: 0.3s;
+        }
+        .btn:hover { filter: brightness(1.2); transform: translateY(-3px); }
+
+        .letter-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px; border-radius: 15px; border: 1px solid var(--love);
+            backdrop-filter: blur(5px); line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="p1" class="page active">
+            <h1 style="color: var(--love);">Arymus Maze</h1>
+            <p>Aryan is lost and needs to reach Muskan's heart. <br>Use the buttons to guide him!</p>
+            <button class="btn" onclick="showPage('p2')">Start Navigation</button>
+        </div>
+
+        <div id="p2" class="page">
+            <h3>Guide Aryan to Muskan</h3>
+            <div id="maze-container"></div>
+            <div style="margin-top: 15px;">
+                <button class="btn" style="padding: 10px 20px;" onclick="move('up')">↑</button><br>
+                <button class="btn" style="padding: 10px 20px;" onclick="move('left')">←</button>
+                <button class="btn" style="padding: 10px 20px;" onclick="move('down')">↓</button>
+                <button class="btn" style="padding: 10px 20px;" onclick="move('right')">→</button>
+            </div>
+            <p id="maze-msg">Don't hit the walls!</p>
+        </div>
+
+        <div id="p3" class="page">
+            <h1>You Found Me! ❤️</h1>
+            <div class="letter-card">
+                <p>Muskan, just like this maze, I know I've been a bit difficult lately. I hit some walls, took some wrong turns, and ended up hurting you.</p>
+                <p>I am deeply sorry for my mistake. <b>Arymus</b> is my favorite story, and I don't want this chapter to be a sad one.</p>
+                <p>You are my North Star. Please forgive me?</p>
+            </div>
+            <button class="btn" onclick="showPage('p4')">Next Surprise</button>
+        </div>
+
+        <div id="p4" class="page">
+            <h1>The Arymus Promise</h1>
+            <div class="letter-card" style="font-size: 1.2rem;">
+                🤝 No more arguments for 48 hours.<br>
+                🍦 One unlimited dessert date.<br>
+                🧸 Infinite <i>"I'm sorry"</i> hugs.
+            </div>
+            <p>Click below to seal the deal.</p>
+            <button class="btn" onclick="alert('Deal Sealed! ❤️'); showPage('p5')">Accept Terms</button>
+        </div>
+
+        <div id="p5" class="page">
+            <h1>Are we 100% cool?</h1>
+            <button class="btn" style="background: #2ecc71;" onclick="confettiEffect()">Yes! Love you!</button>
+            <button id="no-btn" class="btn" style="background: #95a5a6;" onmouseover="runAway()">Still Mad 😡</button>
+        </div>
+    </div>
+
+    <script>
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'p2') initMaze();
+        }
+
+        // MAZE LOGIC
+        const mazeData = [
+            [0,1,0,0,0,0,1,0,0,0],
+            [0,1,0,1,1,0,1,1,1,0],
+            [0,0,0,1,0,0,0,0,1,0],
+            [1,1,0,1,0,1,1,0,1,0],
+            [0,0,0,0,0,1,0,0,0,0],
+            [0,1,1,1,1,1,0,1,1,0],
+            [0,0,0,0,0,0,0,1,2,0]
+        ];
+        let playerPos = { x: 0, y: 0 };
+
+        function initMaze() {
+            const container = document.getElementById('maze-container');
+            container.innerHTML = '';
+            mazeData.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    const div = document.createElement('div');
+                    div.className = 'cell' + (cell === 1 ? ' wall' : '');
+                    if(x === playerPos.x && y === playerPos.y) div.innerHTML = '🕺';
+                    if(cell === 2) div.innerHTML = '❤️';
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        function move(dir) {
+            let newX = playerPos.x;
+            let newY = playerPos.y;
+            if(dir === 'up') newY--;
+            if(dir === 'down') newY++;
+            if(dir === 'left') newX--;
+            if(dir === 'right') newX++;
+
+            if(newY >=0 && newY < mazeData.length && newX >=0 && newX < mazeData[0].length) {
+                if(mazeData[newY][newX] === 1) {
+                    document.getElementById('maze-msg').innerText = "Oops! Hit a wall! 🛑";
+                    playerPos = {x:0, y:0};
+                } else if(mazeData[newY][newX] === 2) {
+                    showPage('p3');
+                } else {
+                    playerPos = {x: newX, y: newY};
+                    document.getElementById('maze-msg').innerText = "Keep going! 🏃‍♂️";
+                }
+                initMaze();
+            }
+        }
+
+        function runAway() {
+            const btn = document.getElementById('no-btn');
+            btn.style.position = 'absolute';
+            btn.style.left = Math.random() * 80 + 'vw';
+            btn.style.top = Math.random() * 80 + 'vh';
+        }
+
+        function confettiEffect() {
+            alert("Aryan x Muskan Forever! 🥂");
+            location.reload();
+        }
+    </script>
+</body>
+</html>
